@@ -10,6 +10,10 @@
 # - Tratamento das margens: na implementação com imagens integrais, fazer média considerando somente os pixels válidos; nas outras pode simplesmente ignorar posições cujas janelas ficariam fora da imagem.
 # - O pacote tem algumas imagens para comparação. Se estiver usando OpenCV, compare os resultados com os da função blur da biblioteca (exceto pelas margens, o resultado deve ser igual!).
 #===============================================================================
+# - VE O NEGOCIO DO RXC OU CXR - !!!!
+# - VE OS ARTEFATOS
+# - COMENTA O CODIGO . . . TALVEZ . . .
+#===============================================================================
 
 import sys
 import timeit
@@ -115,53 +119,64 @@ def blur_separavel(img, window_col, window_row):
 
 # ---------------------------------------------------------------------------------------------
 
-def blur_separavel_reaproveitamento(img, window_col, window_row):
-    # Nova imagem de saida, dessa vez precisa de mais uma
+def blur_separavel_reaprov(img, window_col, window_row):
+    # Precisa de duas imagens pra essa
     img_blur_rows = img.copy()
     img_blur_cols = img.copy()
 
     rows,cols,canais = img.shape[:]
     
-    # Percorre imagem, ignorando a parte que não cabe na janela, para as 1Xcols
+    # Para 1Xwindow_col
     for row in range(rows):
+        # A primeira passada de cada row n tem como fazer reaproveitamento
+        primeira_vez = True
         for col in range(window_col//2, cols - window_col//2):
-            
             soma_blue = 0
             soma_red = 0
             soma_green = 0
-            
-            # Percorre a "tripa" mudando as colunas
-            for col_w in range(col - window_col//2, col + window_col//2 + 1):
-                soma_blue = soma_blue + img[row, col_w, 0]
+            if primeira_vez:
+                for col_w in range(col - window_col//2, col + window_col//2 + 1):
+                    soma_blue = soma_blue + img[row, col_w, 0]
+                    if canais >1:
+                        soma_green = soma_green + img[row, col_w, 1]
+                        soma_red = soma_red + img[row, col_w, 2]
+                img_blur_cols[row,col,0] = soma_blue / window_col
+                if canais > 1:
+                    img_blur_cols[row,col,1] = soma_green / window_col
+                    img_blur_cols[row,col,2] = soma_red / window_col 
+                primeira_vez = False
+            # Para as vezes seguintes sera:
+            # Blur[A] = Blur[A-1] - Original[A - window//2 -1]/window + Original[A + window//2]/window
+            else:
+                img_blur_cols[row, col, 0] = img_blur_cols[row, col-1, 0] - img[row, col-(window_col//2) -1, 0]/window_col + (img[row, col+(window_col//2) , 0]/window_col)
                 if canais >1:
-                    soma_green = soma_green + img[row, col_w, 1]
-                    soma_red = soma_red + img[row, col_w, 2]
-            
-            # Faz a media pelo numero de colunas
-            img_blur_cols[row,col,0] = soma_blue / window_col
-            if canais > 1:
-                img_blur_cols[row,col,1] = soma_green / window_col
-                img_blur_cols[row,col,2] = soma_red / window_col       
+                    img_blur_cols[row, col, 1] = img_blur_cols[row, col-1, 1] - (img[row, col-(window_col//2) -1 , 1]/window_col) + (img[row, col+(window_col//2) , 1]/window_col)
+                    img_blur_cols[row, col, 2] = img_blur_cols[row, col-1, 2] - (img[row, col-(window_col//2) -1, 2]/window_col) + (img[row, col+(window_col//2) , 2]/window_col)
     
-    # Para as rowsX1
-    for row in range(window_row//2, rows - window_row//2):
-        for col in range(cols):
-            
+    # Para window_rowsX1, analogo
+    for col in range(cols):
+        primeira_vez = True
+        for row in range(window_row//2, rows - window_row//2):
             soma_blue = 0
             soma_red = 0
             soma_green = 0
-            
-            for row_w in range(row - window_row//2, row + window_row//2 +1):
-                soma_blue = soma_blue + img_blur_cols[row_w, col, 0]
+            if primeira_vez:
+                for row_w in range(row - window_row//2, row + window_row//2 + 1):
+                    soma_blue = soma_blue + img_blur_cols[row_w, col, 0]
+                    if canais >1:
+                        soma_green = soma_green + img_blur_cols[row_w, col, 1]
+                        soma_red = soma_red + img_blur_cols[row_w, col, 2]
+                img_blur_rows[row,col,0] = soma_blue / window_row
+                if canais > 1:
+                    img_blur_rows[row,col,1] = soma_green / window_row
+                    img_blur_rows[row,col,2] = soma_red / window_row
+                primeira_vez = False            
+            else:
+                img_blur_rows[row, col, 0] = img_blur_rows[row-1, col, 0] - (img_blur_cols[row-(window_row//2) -1, col , 0]/window_row )+ (img_blur_cols[row +(window_row//2) , col, 0]/window_row)
                 if canais >1:
-                    soma_green = soma_green + img_blur_cols[row_w, col, 1]
-                    soma_red = soma_red + img_blur_cols[row_w, col, 2]
+                    img_blur_rows[row, col, 1] = img_blur_rows[row-1, col, 1] - (img_blur_cols[row-(window_row//2)-1, col , 1]/window_row) + (img_blur_cols[row+(window_row//2) , col, 1]/window_row)
+                    img_blur_rows[row, col, 2] = img_blur_rows[row-1, col, 2] - (img_blur_cols[row-(window_row//2) -1, col, 2]/window_row) + (img_blur_cols[row+(window_row//2) , col, 2]/window_row)
     
-            img_blur_rows[row,col,0] = soma_blue / window_row
-            if canais > 1:
-                img_blur_rows[row,col,1] = soma_green / window_row
-                img_blur_rows[row,col,2] = soma_red / window_row           
-
     return img_blur_rows
 
 # ---------------------------------------------------------------------------------------------
@@ -211,8 +226,8 @@ def main ():
     img = img.astype (np.float32) / 255
 
     # Abre imagem para comparação
-    # - VE O NEGOCIO DO RXC OU CXR - !!!!
-    img_exemplo = cv2.imread (IMG_EXEMPLO_B_7X7)
+    
+    img_exemplo = cv2.imread (IMG_EXEMPLO_B_11X15)
     if img_exemplo is None:
         print ('Erro abrindo a imagem.\n')
         sys.exit ()
@@ -221,30 +236,33 @@ def main ():
 
     # - INGENUO -
     # Mostra e compara imagens
-    img_blur_ing = blur_ingenuo(img,7,7)
-    cv2.imshow ('ImgameBlurIngenuo', img_blur_ing)
-    cv2.imwrite ('ImgameBlurIngenuo.png', img_blur_ing)
-    cv2.imshow ('ImagemBlurExemplo', img_exemplo)
-    cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_ing ))
+    # img_blur_ing = blur_ingenuo(img,7,7)
+    # cv2.imshow ('ImgameBlurIngenuo', img_blur_ing)
+    # cv2.imwrite ('ImgameBlurIngenuo.png', img_blur_ing)
+    # cv2.imshow ('ImagemBlurExemplo', img_exemplo)
+    # cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_ing ))
 
-    cv2.waitKey ()
-    cv2.destroyAllWindows ()
+    # cv2.waitKey ()
+    # cv2.destroyAllWindows ()
 
     # - SEPARAVEL SEM REAPROVEITAMENTO -
     # Mostra e compara imagens
-    img_blur_separavel = blur_separavel(img,7,7)
-    cv2.imshow ('ImgameBlurSeparavel', img_blur_separavel)
-    cv2.imwrite ('ImgameBlurSeparavel.png', img_blur_separavel)
-    cv2.imshow ('ImagemBlurExemplo', img_exemplo)
-    cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_separavel ))
+    # img_blur_separavel = blur_separavel(img,7,7)
+    # cv2.imshow ('ImgameBlurSeparavel', img_blur_separavel)
+    # cv2.imwrite ('ImgameBlurSeparavel.png', img_blur_separavel)
+    # cv2.imshow ('ImagemBlurExemplo', img_exemplo)
+    # cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_separavel ))
+
+    # cv2.waitKey ()
+    # cv2.destroyAllWindows ()
 
     # - SEPARAVEL COM REAPROVEITAMENTO -
     # Mostra e compara imagens
-    # img_blur_ing = blur_ingenuo(img,11,15)
-    # cv2.imshow ('ImgameBlur', img_blur_ing)
-    # cv2.imwrite ('ImgameBlur.png', img_blur_ing)
-    # cv2.imshow ('ImagemBlurExemplo', img_exemplo)
-    # cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_ing ))
+    img_blur_sep_reap = blur_separavel_reaprov(img,11,15)
+    cv2.imshow ('ImgameBlurSeparavelReaproveitamento', img_blur_sep_reap)
+    cv2.imwrite ('ImgameBlurSeparavelReaproveitamento.png', img_blur_sep_reap)
+    cv2.imshow ('ImagemBlurExemplo', img_exemplo)
+    cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_sep_reap ))
 
     # - INTEGRAL -
     # Mostra e compara imagens
