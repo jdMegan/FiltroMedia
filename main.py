@@ -16,14 +16,14 @@ import timeit
 import numpy as np
 import cv2
 #===============================================================================
-INPUT_IMAGE_A =  '/home/megan/Universidade/BSI261/PDI/FiltroMedia/a01 - Original.bmp'
-INPUT_IMAGE_B =  '/home/megan/Universidade/BSI261/PDI/FiltroMedia/b01 - Original.bmp'
-IMG_EXEMPLO_A_3X3  = '/home/megan/Universidade/BSI261/PDI/FiltroMedia/a02 - Borrada 3x3.bmp'
-IMG_EXEMPLO_A_3X13  = '/home/megan/Universidade/BSI261/PDI/FiltroMedia/a03 - Borrada 3x13.bmp'
-IMG_EXEMPLO_A_11X1 = '/home/megan/Universidade/BSI261/PDI/FiltroMedia/a04 - Borrada 11x1.bmp'
-IMG_EXEMPLO_A_51X21  = '/home/megan/Universidade/BSI261/PDI/FiltroMedia/a05 - Borrada 51x21.bmp'
-IMG_EXEMPLO_B_7X7  =  '/home/megan/Universidade/BSI261/PDI/FiltroMedia/b02 - Borrada 7x7.bmp'
-IMG_EXEMPLO_B_11X15  = '/home/megan/Universidade/BSI261/PDI/FiltroMedia/b03 - Borrada 11x15.bmp'
+INPUT_IMAGE_A =  '/a01 - Original.bmp'
+INPUT_IMAGE_B =  '/b01 - Original.bmp'
+IMG_EXEMPLO_A_3X3  = '/a02 - Borrada 3x3.bmp'
+IMG_EXEMPLO_A_3X13  = '/a03 - Borrada 3x13.bmp'
+IMG_EXEMPLO_A_11X1 = '/a04 - Borrada 11x1.bmp'
+IMG_EXEMPLO_A_51X21  = '/a05 - Borrada 51x21.bmp'
+IMG_EXEMPLO_B_7X7  =  '/b02 - Borrada 7x7.bmp'
+IMG_EXEMPLO_B_11X15  = '/b03 - Borrada 11x15.bmp'
 #===============================================================================
 
 def blur_ingenuo(img, window_col, window_row):
