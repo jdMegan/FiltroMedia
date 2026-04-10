@@ -11,10 +11,6 @@
 # - Tratamento das margens: na implementação com imagens integrais, fazer média considerando somente os pixels válidos; nas outras pode simplesmente ignorar posições cujas janelas ficariam fora da imagem. OK
 # - O pacote tem algumas imagens para comparação. Se estiver usando OpenCV, compare os resultados com os da função blur da biblioteca (exceto pelas margens, o resultado deve ser igual!). OK
 #===============================================================================
-# - VE O NEGOCIO DO RXC OU CXR - !!!!
-# - VE OS ARTEFATOS
-# - TALVEZ SEPARAR A ITEGRAL EM DUAS PRA N FICAR REFAZENDO IMAGEM . . . TALVEZ . . .
-#===============================================================================
 import sys
 import timeit
 import numpy as np
@@ -30,7 +26,7 @@ IMG_EXEMPLO_B_7X7  =  '/home/megan/Universidade/BSI261/PDI/FiltroMedia/b02 - Bor
 IMG_EXEMPLO_B_11X15  = '/home/megan/Universidade/BSI261/PDI/FiltroMedia/b03 - Borrada 11x15.bmp'
 #===============================================================================
 
-def blur_ingenuo(img, window_row, window_col):
+def blur_ingenuo(img, window_col, window_row):
     # Nova imagem de saida, não é in-place
     img_blur = img.copy()
 
@@ -49,8 +45,8 @@ def blur_ingenuo(img, window_row, window_col):
             soma_green = 0
             
             # Percorre a janela somando os valores dos pixeis
-            for row_w in range(row - window_row//2, row + window_row//2 +1):
-                for col_w in range(col - window_col//2, col + window_col//2 + 1):
+            for row_w in range(row - (window_row//2), row + window_row//2 +1):
+                for col_w in range(col - (window_col//2), col + window_col//2 + 1):
                     soma_blue = soma_blue + img[row_w, col_w, 0]
                     if canais > 1:
                         soma_green = soma_green + img[row_w, col_w, 1]
@@ -66,7 +62,7 @@ def blur_ingenuo(img, window_row, window_col):
 
 # ---------------------------------------------------------------------------------------------
 
-def blur_separavel(img, window_row, window_col):
+def blur_separavel(img, window_col, window_row):
     # Nova imagem de saida, dessa vez precisa de mais uma
     img_blur_rows = img.copy()
     img_blur_cols = img.copy()
@@ -117,7 +113,7 @@ def blur_separavel(img, window_row, window_col):
 
 # ---------------------------------------------------------------------------------------------
 
-def blur_separavel_reaprov(img, window_row, window_col):
+def blur_separavel_reaprov(img, window_col,  window_row):
     # Precisa de duas imagens pra essa
     img_blur_rows = img.copy()
     img_blur_cols = img.copy()
@@ -180,7 +176,7 @@ def blur_separavel_reaprov(img, window_row, window_col):
 
 # ---------------------------------------------------------------------------------------------
 
-def gerar_integral(img):
+def gerar_integral(img, window_col, window_row):
     img_int = img.copy()
     rows,cols,canais = img.shape[:]
     
@@ -203,10 +199,26 @@ def gerar_integral(img):
 # ---------------------------------------------------------------------------------------------
 
 def blur_integral(img, window_col, window_row):
+    img_integral = gerar_integral(img,window_col, window_row)
     img_blur_int = img.copy()
     rows,cols,canais = img.shape[:]
-      
 
+    ww = window_row * window_col
+    
+    for row in range(window_row//2 + 1, rows - window_row//2):
+        for col in range(window_col//2 + 1, cols - window_col//2):
+          
+            for ch in range(canais):
+                # Pega os pixeis na diagonal dos vertices da janela
+                top_left    = img_integral[row - window_row//2-1, col - window_col//2-1, ch]
+                top_right   = img_integral[row - window_row//2-1, col + window_col//2, ch]
+                bottom_left  = img_integral[row + window_row//2, col - window_col//2-1, ch] 
+                bottom_right = img_integral[row + window_row//2, col + window_col//2, ch]
+                bottom_right = img_integral[row + window_row//2, col + window_col//2 ,ch]
+
+                # Soma e diminui e divide
+                img_blur_int[row, col, ch] = (bottom_right - bottom_left - top_right + top_left)/ww
+ 
     return img_blur_int
 
 #===============================================================================
@@ -229,46 +241,52 @@ def main ():
     img_exemplo = img_exemplo.astype (np.float32) / 255
 
     # - INGENUO -
-    # Mostra e compara imagens
-    img_blur_ing = blur_ingenuo(img,11,15)
-    cv2.imshow ('ImgameBlurIngenuo', img_blur_ing)
-    cv2.imwrite ('ImgameBlurIngenuo.png', img_blur_ing)
-    cv2.imshow ('ImagemBlurExemplo', img_exemplo)
-    cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_ing ))
+    ingenuo = True
+    if ingenuo:
+        img_blur_ing = blur_ingenuo(img,11,15)
+        cv2.imshow ('ImgameBlurIngenuo', img_blur_ing)
+        #cv2.imwrite ('ImgameBlurIngenuo.png', img_blur_ing*255)
+        cv2.imshow ('ImagemBlurExemplo', img_exemplo)
+        cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_ing )*10)
 
-    cv2.waitKey ()
-    cv2.destroyAllWindows ()
+        cv2.waitKey ()
+        cv2.destroyAllWindows ()
 
     # - SEPARAVEL SEM REAPROVEITAMENTO -
-    img_blur_separavel = blur_separavel(img,11,15)
-    cv2.imshow ('ImgameBlurSeparavel', img_blur_separavel)
-    cv2.imwrite ('ImgameBlurSeparavel.png', img_blur_separavel)
-    cv2.imshow ('ImagemBlurExemplo', img_exemplo)
-    cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_separavel ))
+    sep = True
+    if sep:
+        img_blur_separavel = blur_separavel(img,11,15)
+        cv2.imshow ('ImgameBlurSeparavel', img_blur_separavel)
+        #cv2.imwrite ('ImgameBlurSeparavel.png', img_blur_separavel *255)
+        cv2.imshow ('ImagemBlurExemplo', img_exemplo)
+        cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_separavel )*10)
 
-    cv2.waitKey ()
-    cv2.destroyAllWindows ()
+        cv2.waitKey ()
+        cv2.destroyAllWindows ()
 
     # - SEPARAVEL COM REAPROVEITAMENTO -
-    img_blur_sep_reap = blur_separavel_reaprov(img,11,15)
-    cv2.imshow ('ImgameBlurSeparavelReaproveitamento', img_blur_sep_reap)
-    cv2.imwrite ('ImgameBlurSeparavelReaproveitamento.png', img_blur_sep_reap)
-    cv2.imshow ('ImagemBlurExemplo', img_exemplo)
-    cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_sep_reap ))
+    sep_reap = True
+    if sep_reap:
+        img_blur_sep_reap = blur_separavel_reaprov(img,11,15)
+        cv2.imshow ('ImgameBlurSeparavelReaproveitamento', img_blur_sep_reap)
+        #cv2.imwrite ('ImgameBlurSeparavelReaproveitamento.png', img_blur_sep_reap*255)
+        cv2.imshow ('ImagemBlurExemplo', img_exemplo)
+        cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_sep_reap )*10)
 
-    cv2.waitKey ()
-    cv2.destroyAllWindows ()
+        cv2.waitKey ()
+        cv2.destroyAllWindows ()
 
     # - INTEGRAL -
-    # img_integ = gerar_integral(img)
-    # img_blur_integ = blur_integral(img_integ, 11, 15)
-    # cv2.imshow ('ImgameBlurIntegral', img_blur_integ)
-    # cv2.imwrite ('ImgameBlurIntegral.png', img_blur_integ)
-    # cv2.imshow ('ImagemBlurExemplo', img_exemplo)
-    # cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_integ ))
+    integ = True
+    if integ:
+        img_blur_integ = blur_integral(img, 11, 15)
+        cv2.imshow ('ImgameBlurIntegral', img_blur_integ)
+        #cv2.imwrite ('ImgameBlurIntegral.png', img_blur_integ*255)
+        cv2.imshow ('ImagemBlurExemplo', img_exemplo)
+        cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_integ )*10)
 
-    # cv2.waitKey ()
-    # cv2.destroyAllWindows ()
+        cv2.waitKey ()
+        cv2.destroyAllWindows ()
 
 if __name__ == '__main__':
     main ()
