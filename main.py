@@ -245,7 +245,7 @@ def main ():
     if ingenuo:
         img_blur_ing = blur_ingenuo(img,11,15)
         cv2.imshow ('ImgameBlurIngenuo', img_blur_ing)
-        #cv2.imwrite ('ImgameBlurIngenuo.png', img_blur_ing*255)
+        cv2.imwrite ('ImgameBlurIngenuo.png', img_blur_ing*255)
         cv2.imshow ('ImagemBlurExemplo', img_exemplo)
         cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_ing )*10)
 
@@ -257,7 +257,7 @@ def main ():
     if sep:
         img_blur_separavel = blur_separavel(img,11,15)
         cv2.imshow ('ImgameBlurSeparavel', img_blur_separavel)
-        #cv2.imwrite ('ImgameBlurSeparavel.png', img_blur_separavel *255)
+        cv2.imwrite ('ImgameBlurSeparavel.png', img_blur_separavel *255)
         cv2.imshow ('ImagemBlurExemplo', img_exemplo)
         cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_separavel )*10)
 
@@ -269,7 +269,7 @@ def main ():
     if sep_reap:
         img_blur_sep_reap = blur_separavel_reaprov(img,11,15)
         cv2.imshow ('ImgameBlurSeparavelReaproveitamento', img_blur_sep_reap)
-        #cv2.imwrite ('ImgameBlurSeparavelReaproveitamento.png', img_blur_sep_reap*255)
+        cv2.imwrite ('ImgameBlurSeparavelReaproveitamento.png', img_blur_sep_reap*255)
         cv2.imshow ('ImagemBlurExemplo', img_exemplo)
         cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_sep_reap )*10)
 
@@ -281,7 +281,7 @@ def main ():
     if integ:
         img_blur_integ = blur_integral(img, 11, 15)
         cv2.imshow ('ImgameBlurIntegral', img_blur_integ)
-        #cv2.imwrite ('ImgameBlurIntegral.png', img_blur_integ*255)
+        cv2.imwrite ('ImgameBlurIntegral.png', img_blur_integ*255)
         cv2.imshow ('ImagemBlurExemplo', img_exemplo)
         cv2.imshow ('DiferencaImagens', (img_exemplo - img_blur_integ )*10)
 
